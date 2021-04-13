@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shopping_list/general_providers.dart';
 import 'package:shopping_list/models/item_model.dart';
+import 'package:shopping_list/extensions/firebase_firestore_wxtension.dart';
 import 'package:shopping_list/repository/custom_exception.dart';
 
 abstract class BaseItemRepository {
@@ -22,9 +23,7 @@ class ItemRepository implements BaseItemRepository {
       {required String userId, required Item item}) async {
     try {
       final docRef = await _read(firebaseFireStoreProivder)
-          .collection('lists')
-          .doc(userId)
-          .collection('userList')
+          .usersListRef(userId)
           .add(item.toDocument());
       return docRef.id;
     } on FirebaseException catch (e) {
@@ -37,10 +36,8 @@ class ItemRepository implements BaseItemRepository {
       {required String userId, required String itemId}) async {
     try {
       await _read(firebaseFireStoreProivder)
-          .collection('lists')
-          .doc(userId)
-          .collection('userList')
-          .doc(userId)
+          .usersListRef(userId)
+          .doc(itemId)
           .delete();
     } on FirebaseException catch (e) {
       throw CustomException(message: e.message);
@@ -50,11 +47,8 @@ class ItemRepository implements BaseItemRepository {
   @override
   Future<List<Item>> retrieveItems({required String userId}) async {
     try {
-      final snap = await _read(firebaseFireStoreProivder)
-          .collection('lists')
-          .doc(userId)
-          .collection("userList")
-          .get();
+      final snap =
+          await _read(firebaseFireStoreProivder).usersListRef(userId).get();
       return snap.docs.map((doc) => Item.fromDocument(doc)).toList();
     } on FirebaseException catch (e) {
       throw CustomException(message: e.message);
@@ -65,10 +59,8 @@ class ItemRepository implements BaseItemRepository {
   Future<void> updateItem({required String userId, required Item item}) async {
     try {
       await _read(firebaseFireStoreProivder)
-          .collection('lists')
-          .doc(userId)
-          .collection('userList')
-          .doc(userId)
+          .usersListRef(userId)
+          .doc(item.id)
           .update(item.toDocument());
     } on FirebaseException catch (e) {
       throw CustomException(message: e.message);

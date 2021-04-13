@@ -4,6 +4,30 @@ import 'package:shopping_list/models/item_model.dart';
 import 'package:shopping_list/repository/custom_exception.dart';
 import 'package:shopping_list/repository/item_repository.dart';
 
+enum ItemListFilter {
+  all,
+  obtained,
+}
+
+final itemListFilterProvider =
+    StateProvider<ItemListFilter>((_) => ItemListFilter.all);
+
+final filteredItemListProvider = Provider<List<Item>>((ref) {
+  final itemListFilterState = ref.watch(itemListFilterProvider).state;
+  final itemListState = ref.watch(itemListControllerProvider);
+  return itemListState.maybeWhen(
+    data: (items) {
+      switch (itemListFilterState) {
+        case ItemListFilter.obtained:
+          return items.where((item) => item.obtained).toList();
+        default:
+          return items;
+      }
+    },
+    orElse: () => [],
+  );
+});
+
 final itemListExceptionProvider = StateProvider<CustomException?>((_) => null);
 final itemListControllerProvider =
     StateNotifierProvider<ItemListController, AsyncValue<List<Item>>>((ref) {
@@ -15,14 +39,15 @@ class ItemListController extends StateNotifier<AsyncValue<List<Item>>> {
   final Reader _read;
   final String? _userId;
 
-  ItemListController(this._read, this._userId) : super(AsyncValue.loading()) {
+  ItemListController(this._read, this._userId)
+      : super(const AsyncValue.loading()) {
     if (_userId != null) {
       retrieveItems();
     }
   }
 
   Future<void> retrieveItems({bool isRefreshing = false}) async {
-    if (isRefreshing) state = AsyncValue.loading();
+    if (isRefreshing) state = const AsyncValue.loading();
     try {
       final items =
           await _read(itemRepositoryProvider).retrieveItems(userId: _userId!);

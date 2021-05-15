@@ -6,10 +6,12 @@ import 'package:shopping_list/controllers/auth_controller.dart';
 import 'package:shopping_list/controllers/item_list_controller.dart';
 import 'package:shopping_list/models/item_model.dart';
 import 'package:shopping_list/repository/custom_exception.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   runApp(
     ProviderScope(
       child: MyApp(),
@@ -17,7 +19,17 @@ Future main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    //FirebaseCrashlytics.instance.crash();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
